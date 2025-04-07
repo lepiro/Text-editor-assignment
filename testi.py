@@ -87,8 +87,8 @@ class NotesApp(tk.Tk):
 
         # Edit menu
         edit_menu = tk.Menu(menu_bar, tearoff=0)
-        edit_menu.add_command(label="Undo", command=self.undo)
-        edit_menu.add_command(label="Redo", command=self.redo)
+        edit_menu.add_command(label="Undo", accelerator="CTRL+Z", command=self.undo)
+        edit_menu.add_command(label="Redo", accelerator="CTRL+Y", command=self.redo)
         menu_bar.add_cascade(label="Edit", menu=edit_menu)
 
         # Attaching the menu bar
@@ -104,6 +104,9 @@ class NotesApp(tk.Tk):
         # Creating a Text widget
         self.text_area = tk.Text(self, wrap="word", undo=True, bg="#ffffff", highlightthickness=0, relief="flat")
         self.text_area.pack(expand=True, fill=tk.BOTH)
+
+        self.bind_all(("Control-z"), lambda event: self.undo()) # Keyboard shortcut for undo
+        self.bind_all(("Control-y"), lambda event: self.redo()) # Keyboard shortcut for redo
 
         # Binding key release event to apply syntax highlighting
         self.text_area.bind("<KeyRelease>", self.on_key_release)
@@ -184,6 +187,7 @@ class NotesApp(tk.Tk):
             self.text_area.insert("1.0", content)
 
     def on_key_release(self, event=None):
+        self.text_area.edit_separator() # Ensures undo/redo is one letter at a time
         # Syntax highlighting function whenever a key is released
         syntax_highlight(self.text_area)
         self.autocomplete(event)

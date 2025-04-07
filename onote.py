@@ -146,6 +146,9 @@ class Notes(tk.Tk):
 
         self.buttons_ribbon.update_buttons()
 
+        self.bind_all("<Control-s>", lambda event: self.save()) # Keyboard shortcut for save and save as
+        self.bind_all("<Control-Shift-s>", lambda event: self.saveAs())
+
 def main():
     s = ''  
     while True: 
