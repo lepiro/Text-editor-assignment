@@ -69,7 +69,7 @@ def autocomplete(event, text_widget: Text):
 class NotesApp(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title("Text Editor for Dummies")
+        self.title("Bestest Text Editor")
         self.geometry("600x400")
         # Creating a frame for buttons and search bar
         self.top_frame = tk.Frame(self)
@@ -118,6 +118,9 @@ class NotesApp(tk.Tk):
         self.suggestion_box = tk.Listbox(self, height=5)
         self.suggestion_box.pack_forget()  # Initially hidden
         self.suggestion_box.bind("<<ListboxSelect>>", self.insert_autocomplete)
+
+        # Ask for confirmation before closing the window
+        self.protocol("WM_DELETE_WINDOW", lambda: self.close())
 
     def position_suggestion_box(self):
         # Calculate the width of window
@@ -182,6 +185,12 @@ class NotesApp(tk.Tk):
                 content = f.read()
             self.text_area.delete("1.0", "end-1c")
             self.text_area.insert("1.0", content)
+    
+    # Close the application and ask for confirmation to save changes
+    def close(self):
+        if messagebox.askyesno("Exit", "Do you want to save before exiting?"):
+            self.save_file()
+        self.destroy()
 
     def on_key_release(self, event=None):
         # Syntax highlighting function whenever a key is released
