@@ -165,7 +165,7 @@ class NotesApp(tk.Tk):
         self.buttons_ribbon = ButtonsRibbon(self, self)
         self.buttons_ribbon.pack(fill=tk.X)
 
-        self.text_area.bind("<KeyRelease>", lambda event: self.buttons_ribbon.update_buttons())
+        self.text_area.bind("<KeyRelease>", lambda: self.buttons_ribbon.update_buttons())
 
         self.buttons_ribbon.update_buttons()
 
