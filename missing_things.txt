@@ -10,6 +10,6 @@ Spell check for python syntax(?)
 Try to add frames
 Make text editor standard size only // tai et sitä pystyy skaalaamaan (ankkuroidaan kaikki ruudun reunoihin tms.)
 
-Copy and paste functions (also in buttons ribbon)
-
-Optional, but if we want we could add function Ctrl + backspace -> deletes the previous word
+Optional:
+- Copy and paste functions in buttons ribbon
+- Shortcuts, such as Ctrl + backspace -> deletes the previous word

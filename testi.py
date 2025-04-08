@@ -66,6 +66,7 @@ def autocomplete(event, text_widget: Text):
             text_widget.delete(start_pos, end_pos)  # Removing the incomplete word
             text_widget.insert("insert", match)  # Inserting the matching keyword
 
+# Abstract class for Blocks defining the interface for all blocks(=buttons) for the ribbon
 class Block(ttk.Frame, ABC):
     def __init__(self, parent):
         ttk.Frame.__init__(self, parent)
@@ -150,6 +151,9 @@ class NotesApp(tk.Tk):
         # Binding the autocomplete function on TAB key press
         self.text_area.bind("<Tab>", self.on_tab_press)
 
+        # Binding the backspace key (to remove tab spaces)
+        self.text_area.bind("<BackSpace>", self.on_backspace_press)
+
         # File path
         self.file_path = None
 
@@ -231,7 +235,7 @@ class NotesApp(tk.Tk):
             self.text_area.delete("1.0", "end-1c")
             self.text_area.insert("1.0", content)
     
-    # Close the application and ask for confirmation to save changes
+    # Asking for confirmation to save changes when closing the app
     def close(self):
         if messagebox.askyesno("Exit", "Do you want to save before exiting?"):
             self.save_file()
@@ -249,6 +253,19 @@ class NotesApp(tk.Tk):
         # Calling autocomplete function
         autocomplete(event, self.text_area)
         return "break"  # Preventing default tab insertion behavior
+    
+    # Deleting all 4 spaces (=tab) at once when backspace is pressed
+    def on_backspace_press(self, event=None):
+        widget = event.widget
+        index = widget.index(tk.INSERT)
+
+        # Get the previous 4 characters
+        start = f"{index} -4c"
+        prev_chars = widget.get(start, index)
+
+        if prev_chars == " " * 4:
+            widget.delete(start, index)
+            return "break"  # Prevent default backspace
 
     def autocomplete(self, event):
         # Getting the current word being typed
