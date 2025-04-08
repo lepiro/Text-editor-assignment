@@ -8,3 +8,4 @@ Word suggestion box:
 
 Spell check for python syntax(?)
 Try to add frames
+Make text editor standard size only
