@@ -7,3 +7,4 @@ Word suggestion box:
 - Make tab work
 
 Spell check for python syntax(?)
+Try to add frames
