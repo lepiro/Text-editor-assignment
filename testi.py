@@ -164,9 +164,6 @@ class NotesApp(tk.Tk):
         # Creating the buttons ribbon
         self.buttons_ribbon = ButtonsRibbon(self, self)
         self.buttons_ribbon.pack(fill=tk.X)
-
-        self.text_area.bind("<KeyRelease>", lambda: self.buttons_ribbon.update_buttons())
-
         self.buttons_ribbon.update_buttons()
 
     def position_suggestion_box(self):
