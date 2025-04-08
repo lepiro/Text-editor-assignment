@@ -2,10 +2,14 @@ Keyword list:
 - Keywords need to have different colours
 
 Word suggestion box:
-- Doesn't close, fix it
-- Do something so that the suggestion box doesn't over text (position_suggestion_box)
-- Make tab work
+- Doesn't close, fix it // would it be good if you press space and then the box goes away, right?
+- Do something so that the suggestion box doesn't go over text (position_suggestion_box)
+- Make tab work and arrow keys to navigate in the suggestion box
 
 Spell check for python syntax(?)
 Try to add frames
-Make text editor standard size only
+Make text editor standard size only // tai et sitä pystyy skaalaamaan (ankkuroidaan kaikki ruudun reunoihin tms.)
+
+Copy and paste functions (also in buttons ribbon)
+
+Optional, but if we want we could add function Ctrl + backspace -> deletes the previous word
