@@ -1,5 +1,6 @@
 import tkinter as tk
-from tkinter import filedialog, messagebox, Text
+from tkinter import filedialog, messagebox, Text, ttk
+from abc import ABC, abstractmethod
 import keyword
 
 # Defining syntax highlighting function
@@ -65,6 +66,44 @@ def autocomplete(event, text_widget: Text):
             text_widget.delete(start_pos, end_pos)  # Removing the incomplete word
             text_widget.insert("insert", match)  # Inserting the matching keyword
 
+class Block(ttk.Frame, ABC):
+    def __init__(self, parent):
+        ttk.Frame.__init__(self, parent)
+
+    @abstractmethod
+    def disable(self, nro):
+        pass
+
+    def disableAll(self):
+        for btn in self.buttons:
+            btn.config(state="disabled")
+
+    def enableAll(self):
+        for btn in self.buttons:
+            btn.config(state="normal")
+
+class ButtonsRibbon(Block):
+    def __init__(self, parent, NotesApp):
+        super().__init__(parent)
+        self.NotesApp = NotesApp
+        
+        self.undo_btn = tk.Button(self, text="UNDO", command=self.NotesApp.undo)
+        self.redo_btn = tk.Button(self, text="REDO", command=self.NotesApp.redo)
+        self.close_btn = tk.Button(self, text="CLOSE", command=self.NotesApp.close)
+        
+        self.buttons = [self.undo_btn, self.redo_btn, self.close_btn]
+        for btn in self.buttons:
+            btn.pack(side=tk.LEFT)
+    
+    def disable(self, nro):
+        if 0 <= nro < len(self.buttons):
+            self.buttons[nro].config(state="disabled")
+        
+    def update_buttons(self):
+        self.undo_btn.config(state="normal")
+        self.redo_btn.config(state="normal")
+        self.close_btn.config(state="normal")
+
 # Sample Tkinter Application
 class NotesApp(tk.Tk):
     def __init__(self):
@@ -121,6 +160,14 @@ class NotesApp(tk.Tk):
 
         # Ask for confirmation before closing the window
         self.protocol("WM_DELETE_WINDOW", lambda: self.close())
+
+        # Creating the buttons ribbon
+        self.buttons_ribbon = ButtonsRibbon(self, self)
+        self.buttons_ribbon.pack(fill=tk.X)
+
+        self.text_area.bind("<KeyRelease>", lambda event: self.buttons_ribbon.update_buttons())
+
+        self.buttons_ribbon.update_buttons()
 
     def position_suggestion_box(self):
         # Calculate the width of window
