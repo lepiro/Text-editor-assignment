@@ -163,7 +163,8 @@ class NotesApp(tk.Tk):
 
         # Creating the buttons ribbon
         self.buttons_ribbon = ButtonsRibbon(self, self)
-        self.buttons_ribbon.pack(fill=tk.X)
+        self.buttons_ribbon.pack(side=tk.TOP, fill=tk.X)
+        self.buttons_ribbon.place(relx=0.12, rely=0.05, anchor=tk.N)
         self.buttons_ribbon.update_buttons()
 
     def position_suggestion_box(self):
