@@ -1,0 +1,10 @@
+Keyword list:
+- Keywords need to have different colours
+
+Word suggestion box:
+- Doesn't close, fix it
+- Do something so that the suggestion box doesn't over text (position_suggestion_box)
+- Make tab work
+
+Spell check for python syntax(?)
+Try to add frames
