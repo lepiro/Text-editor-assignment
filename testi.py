@@ -16,7 +16,7 @@ def syntax_highlight(text_widget: Text):
     for word in keyword.kwlist:  # Python keywords from keyword
         start = "1.0"
         while True:
-            start = text_widget.search(rf"\b{word}\b", start, stopindex="end", regexp=True)
+            start = text_widget.search(rf"{word}", start, stopindex="end", regexp=True)
             if not start:
                 break
             end = f"{start}+{len(word)}c"
