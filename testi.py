@@ -111,59 +111,49 @@ class NotesApp(tk.Tk):
         super().__init__()
         self.title("Bestest Text Editor")
         self.geometry("600x400")
-        # Creating a frame for buttons and search bar
+
+        # Top Frame
         self.top_frame = tk.Frame(self)
         self.top_frame.pack(fill=tk.X, side=tk.TOP)
 
+        # Menu Bar
         menu_bar = tk.Menu(self)
-
-        # File menu
         file_menu = tk.Menu(menu_bar, tearoff=0)
         file_menu.add_command(label="Open", command=self.open_file)
         file_menu.add_command(label="Save", command=self.save_file)
         file_menu.add_separator()
         file_menu.add_command(label="Exit", command=self.quit)
         menu_bar.add_cascade(label="File", menu=file_menu)
-
-        # Edit menu
+        
         edit_menu = tk.Menu(menu_bar, tearoff=0)
         edit_menu.add_command(label="Undo", command=self.undo)
         edit_menu.add_command(label="Redo", command=self.redo)
         menu_bar.add_cascade(label="Edit", menu=edit_menu)
-
-        # Attaching the menu bar
+        
         self.config(menu=menu_bar)
 
         # Search Bar
+        self.search_entry = tk.Entry(self.top_frame, width=20)
+        self.search_entry.pack(side=tk.RIGHT, padx=5)
         self.search_button = tk.Button(self.top_frame, text="Search", command=self.search_word, bg="lightblue")
         self.search_button.pack(side=tk.RIGHT, padx=5)
 
-        self.search_entry = tk.Entry(self.top_frame, width=20)  # Set the width to 20
-        self.search_entry.pack(side=tk.RIGHT, fill=tk.X, expand=False)  # Remove expand=True
-
-        # Creating a Text widget
+        # Text Area
         self.text_area = tk.Text(self, wrap="word", undo=True, bg="#ffffff", highlightthickness=0, relief="flat")
         self.text_area.pack(expand=True, fill=tk.BOTH)
 
-        # Binding key release event to apply syntax highlighting
-        self.text_area.bind("<KeyRelease>", self.on_key_release)
-
-        # Binding the autocomplete function on TAB key press
-        self.text_area.bind("<Tab>", self.on_tab_press)
-
-        # Binding the backspace key (to remove tab spaces)
-        self.text_area.bind("<BackSpace>", self.on_backspace_press)
-
-        # File path
-        self.file_path = None
-
-        # Autocomplete suggestions
+        # Suggestion Box
         self.suggestion_box = tk.Listbox(self, height=5)
-        self.suggestion_box.pack_forget()  # Initially hidden
-        self.suggestion_box.bind("<<ListboxSelect>>", self.insert_autocomplete)
+        self.suggestion_box.place_forget()
+        self.suggestion_box.bind("<Double-Button-1>", self.insert_autocomplete)
 
-        # Ask for confirmation before closing the window
-        self.protocol("WM_DELETE_WINDOW", lambda: self.close())
+        # Bindings
+        self.text_area.bind("<KeyRelease>", self.on_key_release)
+        self.text_area.bind("<space>", self.hide_suggestion_box)
+        self.text_area.bind("<FocusOut>", self.hide_suggestion_box)
+
+        # File Path
+        self.file_path = None
 
         # Creating the buttons ribbon
         self.buttons_ribbon = ButtonsRibbon(self, self)
@@ -172,14 +162,14 @@ class NotesApp(tk.Tk):
         self.buttons_ribbon.update_buttons()
 
     def position_suggestion_box(self):
-        # Calculate the width of window
+        # Calculating the width of window
         window_width = self.winfo_width()
 
         # The width of the suggestion box
         suggestion_box_width = self.suggestion_box.winfo_reqwidth()
 
         x_position = self.winfo_rootx() # no padding from the right side
-        y_position = self.winfo_rooty() + 30  # Fixed 30 pixels from the top
+        y_position = self.winfo_rooty() + 30  # 30 pixels from the top
 
         # Placing the suggestion box at the calculated position
         self.suggestion_box.place(x=x_position, y=y_position)
@@ -267,12 +257,23 @@ class NotesApp(tk.Tk):
             widget.delete(start, index)
             return "break"  # Prevent default backspace
 
+    def hide_suggestion_box(self, event=None):
+        self.suggestion_box.place_forget()  # Hiding the suggestion box
+        self.suggestion_box.delete(0, tk.END)  # Clearing the suggestion box
+
     def autocomplete(self, event):
+        # Cancelling any previous scheduled hiding of the suggestion box
+        if hasattr(self, "hide_suggestion_job"):
+            self.after_cancel(self.hide_suggestion_job)
+
         # Getting the current word being typed
         cursor_index = self.text_area.index(tk.INSERT)
         line_start = f"{cursor_index.split('.')[0]}.0"
         current_line = self.text_area.get(line_start, cursor_index)
-        last_word = current_line.split()[-1] if current_line.split() else ""
+        words = current_line.split()
+        last_word = words[-1] if words else ""
+
+        self.hide_suggestion_job = self.after(1000, self.hide_suggestion_box)
 
         # Gathering suggestions (Python keywords)
         suggestions = set(keyword.kwlist)
@@ -280,8 +281,8 @@ class NotesApp(tk.Tk):
         suggestions.update(set(text_content.split()))
         matches = [word for word in suggestions if word.lower().startswith(last_word.lower())]
 
-        # Display suggestions in the dropdown
-        if matches:
+        # Displaying suggestions in the dropdown
+        if matches and last_word:
             self.suggestion_box.delete(0, tk.END)
             for match in matches:
                 self.suggestion_box.insert(tk.END, match)
@@ -289,7 +290,11 @@ class NotesApp(tk.Tk):
             # Calling position_suggestion_box method to place the suggestion box
             self.position_suggestion_box()
         else:
-            self.suggestion_box.pack_forget()
+            # Hiding the suggestion box if no matches are found or no word is being typed
+            self.hide_suggestion_box()
+
+        # Scheduling hiding the suggestion box after 1 second of inactivity
+        self.hide_suggestion_job = self.after(1000, self.hide_suggestion_box)
 
     def insert_autocomplete(self, event):
         # Inserting the selected suggestion into the text area
