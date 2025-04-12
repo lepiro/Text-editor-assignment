@@ -1,0 +1,15 @@
+Keyword list:
+- Keywords need to have different colours
+
+Word suggestion box:
+- Doesn't close, fix it // would it be good if you press space and then the box goes away, right?
+- Do something so that the suggestion box doesn't go over text (position_suggestion_box)
+- Make tab work and arrow keys to navigate in the suggestion box
+
+Spell check for python syntax(?)
+Try to add frames
+Make text editor standard size only // tai et sitä pystyy skaalaamaan (ankkuroidaan kaikki ruudun reunoihin tms.)
+
+Optional:
+- Copy and paste functions in buttons ribbon
+- Shortcuts, such as Ctrl + backspace -> deletes the previous word
