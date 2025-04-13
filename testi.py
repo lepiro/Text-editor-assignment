@@ -30,7 +30,7 @@ def syntax_highlight(text_widget: Text):
         start = text_widget.search(r'".*?"', start, stopindex="end", regexp=True)
         if not start:
             break
-        end = f"{start}+{len(text_widget.get(start, start + '+1c'))}c"
+        end = f"{start}+{len(text_widget.get(start, f'{start} lineend'))}c"
         text_widget.tag_add("string", start, end)
         start = end
     text_widget.tag_config("string", foreground="green", font=("Arial", 10, "italic"))
@@ -55,7 +55,7 @@ def autocomplete(event, text_widget: Text):
     if words:
         last_word = words[-1]
 
-        # Finding matching keywords from Python's keyword list
+        # Finding matching keywords from keyword list
         matches = [kw for kw in keyword.kwlist if kw.startswith(last_word)]
 
         if matches:
@@ -105,7 +105,7 @@ class ButtonsRibbon(Block):
         self.redo_btn.config(state="normal")
         self.close_btn.config(state="normal")
 
-# Sample Tkinter Application
+# Tkinter Application
 class NotesApp(tk.Tk):
     def __init__(self):
         super().__init__()
@@ -126,8 +126,8 @@ class NotesApp(tk.Tk):
         menu_bar.add_cascade(label="File", menu=file_menu)
         
         edit_menu = tk.Menu(menu_bar, tearoff=0)
-        edit_menu.add_command(label="Undo", accelerator="CTRL+Z", command=self.undo)
-        edit_menu.add_command(label="Redo", accelerator="CTRL+Y", command=self.redo)
+        edit_menu.add_command(label="Undo", command=self.undo)
+        edit_menu.add_command(label="Redo", command=self.redo)
         menu_bar.add_cascade(label="Edit", menu=edit_menu)
         
         self.config(menu=menu_bar)
@@ -142,18 +142,21 @@ class NotesApp(tk.Tk):
         self.text_area = tk.Text(self, wrap="word", undo=True, bg="#ffffff", highlightthickness=0, relief="flat")
         self.text_area.pack(expand=True, fill=tk.BOTH)
 
-        self.bind_all(("Control-z"), lambda event: self.undo()) # Keyboard shortcut for undo
-        self.bind_all(("Control-y"), lambda event: self.redo()) # Keyboard shortcut for redo
-
         # Suggestion Box
         self.suggestion_box = tk.Listbox(self, height=5)
         self.suggestion_box.place_forget()
-        self.suggestion_box.bind("<Double-Button-1>", self.insert_autocomplete)
+        self.suggestion_box.bind("<Return>", self.insert_autocomplete)
+        self.suggestion_box.bind("<Tab>", self.insert_autocomplete)
+        self.suggestion_box.bind("<Up>", self.navigate_suggestions)
+        self.suggestion_box.bind("<Down>", self.navigate_suggestions)
 
         # Bindings
         self.text_area.bind("<KeyRelease>", self.on_key_release)
+        self.text_area.bind("<Up>", self.navigate_suggestions)
+        self.text_area.bind("<Down>", self.navigate_suggestions)
         self.text_area.bind("<space>", self.hide_suggestion_box)
         self.text_area.bind("<FocusOut>", self.hide_suggestion_box)
+        self.text_area.bind("<Tab>", self.complete_autocomplete)
 
         # File Path
         self.file_path = None
@@ -177,6 +180,7 @@ class NotesApp(tk.Tk):
         # Placing the suggestion box at the calculated position
         self.suggestion_box.place(x=x_position, y=y_position)
         self.suggestion_box.lift()
+
 
     def search_word(self):
         # Getting the word to search
@@ -235,7 +239,10 @@ class NotesApp(tk.Tk):
         self.destroy()
 
     def on_key_release(self, event=None):
-        self.text_area.edit_separator() # Ensures undo/redo is one letter at a time
+        # Skip autocomplete for arrow keys
+        if event.keysym in ["Up", "Down"]:
+            return
+
         # Syntax highlighting function whenever a key is released
         syntax_highlight(self.text_area)
         self.autocomplete(event)
@@ -263,42 +270,40 @@ class NotesApp(tk.Tk):
 
     def hide_suggestion_box(self, event=None):
         self.suggestion_box.place_forget()  # Hiding the suggestion box
-        self.suggestion_box.delete(0, tk.END)  # Clearing the suggestion box
+        self.suggestion_box.delete(0, tk.END)  # Clearing all suggestions
 
     def autocomplete(self, event):
-        # Cancelling any previous scheduled hiding of the suggestion box
-        if hasattr(self, "hide_suggestion_job"):
-            self.after_cancel(self.hide_suggestion_job)
+        # Skipping autocomplete if the space key was pressed
+        if event.keysym == "space":
+            return
 
-        # Getting the current word being typed
+        # Show the current word being typed
         cursor_index = self.text_area.index(tk.INSERT)
         line_start = f"{cursor_index.split('.')[0]}.0"
         current_line = self.text_area.get(line_start, cursor_index)
         words = current_line.split()
         last_word = words[-1] if words else ""
 
-        self.hide_suggestion_job = self.after(1000, self.hide_suggestion_box)
-
-        # Gathering suggestions (Python keywords)
+        # Show suggestions if the last word matches a keyword prefix
         suggestions = set(keyword.kwlist)
-        text_content = self.text_area.get("1.0", "end-1c")
-        suggestions.update(set(text_content.split()))
         matches = [word for word in suggestions if word.lower().startswith(last_word.lower())]
 
-        # Displaying suggestions in the dropdown
-        if matches and last_word:
-            self.suggestion_box.delete(0, tk.END)
+        if matches and last_word:  # Showing suggestions only if there are matches
+            self.suggestion_box.delete(0, tk.END)  # Clearing all previous suggestions
             for match in matches:
                 self.suggestion_box.insert(tk.END, match)
 
-            # Calling position_suggestion_box method to place the suggestion box
-            self.position_suggestion_box()
-        else:
-            # Hiding the suggestion box if no matches are found or no word is being typed
-            self.hide_suggestion_box()
+            # Selecting the first item by default
+            self.suggestion_box.selection_clear(0, tk.END)
+            self.suggestion_box.selection_set(0)
+            self.suggestion_box.activate(0)
 
-        # Scheduling hiding the suggestion box after 1 second of inactivity
-        self.hide_suggestion_job = self.after(1000, self.hide_suggestion_box)
+            # Positioning the suggestion box
+            self.position_suggestion_box()
+            self.suggestion_box.lift()
+        else:
+            # Hiding the suggestion box if no matches are found
+            self.hide_suggestion_box()
 
     def insert_autocomplete(self, event):
         # Inserting the selected suggestion into the text area
@@ -310,6 +315,45 @@ class NotesApp(tk.Tk):
         self.text_area.delete(f"{line_start}+{last_word_start}c", cursor_index)
         self.text_area.insert(tk.INSERT, selected_word)
         self.suggestion_box.pack_forget()
+
+    def complete_autocomplete(self, event):
+        if self.suggestion_box.winfo_ismapped():  # Checking if the suggestion box is visible
+            selected_word = self.suggestion_box.get(tk.ACTIVE)
+            if selected_word:
+                cursor_index = self.text_area.index(tk.INSERT)
+                line_start = f"{cursor_index.split('.')[0]}.0"
+                current_line = self.text_area.get(line_start, cursor_index)
+                last_word_start = current_line.rfind(current_line.split()[-1]) if current_line.split() else 0
+                self.text_area.delete(f"{line_start}+{last_word_start}c", cursor_index)
+                self.text_area.insert(tk.INSERT, selected_word)
+                self.hide_suggestion_box()  # Hiding the suggestion box after inserting
+            return "break"  # Preventing default Tab behavior
+        return None  # Allowing default Tab behavior if no suggestion box is visible
+
+    def navigate_suggestions(self, event):
+        if self.suggestion_box.winfo_ismapped():  # Ensuring the suggestion box is visible
+            size = self.suggestion_box.size()  # Getting the number of items in the Listbox
+            if size == 0:
+                return "break"  # No items to navigate
+
+            try:
+                index = self.suggestion_box.curselection()[0]  # Getting the current selection index
+            except IndexError:
+                index = -1  # No current selection
+
+            # Updating the index based on the key pressed
+            if event.keysym == "Down":
+                index = (index + 1) % size  # Moving down, wrap around at the end
+            elif event.keysym == "Up":
+                index = (index - 1 + size) % size  # Moving up, wrap around at the top
+
+            self.suggestion_box.selection_clear(0, tk.END)  # Clearing previous selection
+            self.suggestion_box.selection_set(index)  # Setting the new selection
+            self.suggestion_box.activate(index)  # Activating the new selection
+
+            return "break"  # Preventing default behavior of arrow keys
+        return None  # Allowing default behavior if the suggestion box is not visible
+
 
 # Running the Tkinter app
 if __name__ == "__main__":
