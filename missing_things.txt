@@ -1,10 +1,10 @@
 Keyword list:
-- Keywords need to have different colours
+- Keywords need to have different colours // done
 
 Word suggestion box:
-- Doesn't close, fix it // would it be good if you press space and then the box goes away, right?
-- Do something so that the suggestion box doesn't go over text (position_suggestion_box)
-- Make tab work and arrow keys to navigate in the suggestion box
+- Doesn't close, fix it // would it be good if you press space and then the box goes away, right? // fixed
+- Do something so that the suggestion box doesn't go over text (position_suggestion_box) 
+- Make tab work and arrow keys to navigate in the suggestion box // done
 
 Spell check for python syntax(?)
 Try to add frames
