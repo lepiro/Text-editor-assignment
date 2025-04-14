@@ -1,16 +1,16 @@
 Keyword list:
 - Keywords need to have different colours // done
-- Keywordit ei saisi näkyä keskellä sanaa
+- Keywordit ei saisi näkyä keskellä sanaa // fixed
 
 Word search:
-- Täytyy saada hakemaan sanoja riippumatta siitä onko tekstissä isoja vai pieniä kirjaimia.
+- Täytyy saada hakemaan sanoja riippumatta siitä onko tekstissä isoja vai pieniä kirjaimia. // fixed
 
 Word suggestion box:
 - Doesn't close, fix it // would it be good if you press space and then the box goes away, right? // fixed
-- Do something so that the suggestion box doesn't go over text (position_suggestion_box) 
+- Do something so that the suggestion box doesn't go over text (position_suggestion_box) //  fixed
 - Make tab work and arrow keys to navigate in the suggestion box // done
 
-Spell check for python syntax(?)
+Spell check for python syntax(?) // mietin että tarviiko tätä, kun kerran pythonin keywordeihin ehdottaa jo sanoja
 Try to add frames
 Make text editor standard size only // tai et sitä pystyy skaalaamaan (ankkuroidaan kaikki ruudun reunoihin tms.) // koko on nyt laitettu maksimin ja minimin avulla tiettyyn kokoon (saa muuttaa jos siltä tuntuu)
 
