@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import filedialog, messagebox, Text, ttk
 from abc import ABC, abstractmethod
 import keyword
+import tkinter.font
 
 # Defining syntax highlighting function
 def syntax_highlight(text_widget: Text):
@@ -33,7 +34,7 @@ def syntax_highlight(text_widget: Text):
         end = f"{start}+{len(text_widget.get(start, f'{start} lineend'))}c"
         text_widget.tag_add("string", start, end)
         start = end
-    text_widget.tag_config("string", foreground="green", font=("Arial", 10, "italic"))
+    text_widget.tag_config("string", foreground="green", font=("Arial", 10, "bold"))
 
     # Highlighting comments in gray
     start = "1.0"
@@ -44,7 +45,7 @@ def syntax_highlight(text_widget: Text):
         end = f"{start}+{len(text_widget.get(start, start + '+1c'))}c"
         text_widget.tag_add("comment", start, end)
         start = end
-    text_widget.tag_config("comment", foreground="gray", font=("Arial", 10, "italic"))
+    text_widget.tag_config("comment", foreground="gray", font=("Arial", 10, "bold"))
 
 # Autocomplete function for Python keywords
 def autocomplete(event, text_widget: Text):
@@ -110,7 +111,8 @@ class NotesApp(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("Bestest Text Editor")
-        self.geometry("600x400")
+        self.maxsize(600, 600) # Setting the maximum size of the window
+        self.minsize(600, 600) # Setting the minimum size of the window
 
         # Top Frame
         self.top_frame = tk.Frame(self)
@@ -139,7 +141,7 @@ class NotesApp(tk.Tk):
         self.search_button.pack(side=tk.RIGHT, padx=5)
 
         # Text Area
-        self.text_area = tk.Text(self, wrap="word", undo=True, bg="#ffffff", highlightthickness=0, relief="flat")
+        self.text_area = tk.Text(self, wrap="word", undo=True, bg="#ffffff", highlightthickness=0, relief="flat", font=("Arial", 10))
         self.text_area.pack(expand=True, fill=tk.BOTH)
 
         # Suggestion Box
