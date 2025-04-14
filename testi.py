@@ -126,9 +126,12 @@ class NotesApp(tk.Tk):
         file_menu.add_command(label="Exit", command=self.quit)
         menu_bar.add_cascade(label="File", menu=file_menu)
         
+        # Edit menu
         edit_menu = tk.Menu(menu_bar, tearoff=0)
         edit_menu.add_command(label="Undo", command=self.undo)
         edit_menu.add_command(label="Redo", command=self.redo)
+        edit_menu.add_command(label="Undo", accelerator="CTRL+Z", command=self.undo)
+        edit_menu.add_command(label="Redo", accelerator="CTRL+Y", command=self.redo)
         menu_bar.add_cascade(label="Edit", menu=edit_menu)
         
         self.config(menu=menu_bar)
@@ -142,6 +145,10 @@ class NotesApp(tk.Tk):
         # Text Area
         self.text_area = tk.Text(self, wrap="word", undo=True, bg="#ffffff", highlightthickness=0, relief="flat", font=("Arial", 10))
         self.text_area.pack(expand=True, fill=tk.BOTH)
+
+        #Keyboard shortcuts
+        self.bind_all(("Control-z"), lambda event: self.undo()) # Keyboard shortcut for undo
+        self.bind_all(("Control-y"), lambda event: self.redo()) # Keyboard shortcut for redo
 
         # Suggestion Box
         self.suggestion_box = tk.Listbox(self, height=5)
@@ -243,7 +250,7 @@ class NotesApp(tk.Tk):
         # Skip autocomplete for arrow keys
         if event.keysym in ["Up", "Down"]:
             return
-
+        self.text_area.edit_separator() # Ensures undo/redo is one letter at a time
         # Syntax highlighting function whenever a key is released
         syntax_highlight(self.text_area)
         self.autocomplete(event)
