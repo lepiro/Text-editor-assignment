@@ -1,5 +1,9 @@
 Keyword list:
 - Keywords need to have different colours // done
+- Keywordit ei saisi näkyä keskellä sanaa
+
+Word search:
+- Täytyy saada hakemaan sanoja riippumatta siitä onko tekstissä isoja vai pieniä kirjaimia.
 
 Word suggestion box:
 - Doesn't close, fix it // would it be good if you press space and then the box goes away, right? // fixed
@@ -8,7 +12,7 @@ Word suggestion box:
 
 Spell check for python syntax(?)
 Try to add frames
-Make text editor standard size only // tai et sitä pystyy skaalaamaan (ankkuroidaan kaikki ruudun reunoihin tms.)
+Make text editor standard size only // tai et sitä pystyy skaalaamaan (ankkuroidaan kaikki ruudun reunoihin tms.) // koko on nyt laitettu maksimin ja minimin avulla tiettyyn kokoon (saa muuttaa jos siltä tuntuu)
 
 Optional:
 - Copy and paste functions in buttons ribbon
