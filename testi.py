@@ -6,26 +6,26 @@ import tkinter.font
 
 # Defining syntax highlighting function
 def syntax_highlight(text_widget: Text):
-    text_widget.get("1.0", "end-1c")  # Get all text from Text widget
-
-    # Removing previous tags for syntax highlighting
+    # Remove previous tags for syntax highlighting
     text_widget.tag_remove("keyword", "1.0", "end")
     text_widget.tag_remove("string", "1.0", "end")
     text_widget.tag_remove("comment", "1.0", "end")
 
-    # Highlighting keywords in blue
-    for word in keyword.kwlist:  # Python keywords from keyword
-        start = "1.0"
-        while True:
-            start = text_widget.search(rf"{word}", start, stopindex="end", regexp=True)
-            if not start:
-                break
-            end = f"{start}+{len(word)}c"
-            text_widget.tag_add("keyword", start, end)
-            start = end
+    # Get all text from the Text widget
+    text_content = text_widget.get("1.0", "end-1c")
+
+    # Highlight keywords in blue (only standalone words)
+    lines = text_content.split("\n")
+    for line_number, line in enumerate(lines, start=1):
+        words = line.split()
+        for word in words:
+            if word in keyword.kwlist:  # Check if the word is a Python keyword
+                start = f"{line_number}.{line.find(word)}"
+                end = f"{start}+{len(word)}c"
+                text_widget.tag_add("keyword", start, end)
     text_widget.tag_config("keyword", foreground="blue", font=("Arial", 10, "bold"))
 
-    # Highlighting strings in green
+    # Highlight strings in green
     start = "1.0"
     while True:
         start = text_widget.search(r'".*?"', start, stopindex="end", regexp=True)
@@ -36,7 +36,7 @@ def syntax_highlight(text_widget: Text):
         start = end
     text_widget.tag_config("string", foreground="green", font=("Arial", 10, "bold"))
 
-    # Highlighting comments in gray
+    # Highlight comments in gray
     start = "1.0"
     while True:
         start = text_widget.search(r"#.*", start, stopindex="end", regexp=True)
@@ -44,7 +44,6 @@ def syntax_highlight(text_widget: Text):
             break
         end = f"{start}+{len(text_widget.get(start, start + '+1c'))}c"
         text_widget.tag_add("comment", start, end)
-        start = end
     text_widget.tag_config("comment", foreground="gray", font=("Arial", 10, "bold"))
 
 # Autocomplete function for Python keywords
@@ -197,7 +196,7 @@ class NotesApp(tk.Tk):
         # Highlighting all occurrences of the search term
         start = "1.0"
         while True:
-            start = self.text_area.search(search_term, start, stopindex="end")
+            start = self.text_area.search(search_term, start, stopindex="end", nocase=True)  # Case-insensitive search
             if not start:
                 break
             end = f"{start}+{len(search_term)}c"
@@ -275,16 +274,21 @@ class NotesApp(tk.Tk):
         self.suggestion_box.delete(0, tk.END)  # Clearing all suggestions
 
     def autocomplete(self, event):
-        # Skipping autocomplete if the space key was pressed
+        # Skip autocomplete if the space key was pressed
         if event.keysym == "space":
             return
 
-        # Show the current word being typed
+        # Get the current word being typed
         cursor_index = self.text_area.index(tk.INSERT)
         line_start = f"{cursor_index.split('.')[0]}.0"
         current_line = self.text_area.get(line_start, cursor_index)
         words = current_line.split()
         last_word = words[-1] if words else ""
+
+        # Ensure the last word is at the end of the line or preceded by a space
+        if not current_line.endswith(last_word) or (len(current_line) > len(last_word) and current_line[-len(last_word) - 1] != " "):
+            self.hide_suggestion_box()
+            return
 
         # Show suggestions if the last word matches a keyword prefix
         suggestions = set(keyword.kwlist)
