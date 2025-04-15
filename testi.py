@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import filedialog, messagebox, Text, ttk
 from abc import ABC, abstractmethod
 import keyword
+import re
 import tkinter.font
 
 # Defining syntax highlighting function
@@ -266,27 +267,6 @@ class NotesApp(tk.Tk):
         syntax_highlight(self.text_area)
         self.autocomplete(event)
 
-    def on_tab_press(self, event=None):
-        # Inserting tab spaces
-        event.widget.insert(tk.INSERT, " " * 4)  # Insert 4 spaces for tab
-
-        # Calling autocomplete function
-        autocomplete(event, self.text_area)
-        return "break"  # Preventing default tab insertion behavior
-    
-    # Deleting all 4 spaces (=tab) at once when backspace is pressed
-    def on_backspace_press(self, event=None):
-        widget = event.widget
-        index = widget.index(tk.INSERT)
-
-        # Get the previous 4 characters
-        start = f"{index} -4c"
-        prev_chars = widget.get(start, index)
-
-        if prev_chars == " " * 4:
-            widget.delete(start, index)
-            return "break"  # Prevent default backspace
-
     def hide_suggestion_box(self, event=None):
         self.suggestion_box.place_forget()  # Hiding the suggestion box
         self.suggestion_box.delete(0, tk.END)  # Clearing all suggestions
@@ -300,11 +280,10 @@ class NotesApp(tk.Tk):
         cursor_index = self.text_area.index(tk.INSERT)
         line_start = f"{cursor_index.split('.')[0]}.0"
         current_line = self.text_area.get(line_start, cursor_index)
-        words = current_line.split()
-        last_word = words[-1] if words else ""
+        match = re.search(r"(\w+)$", current_line)  # Match the last word in the line
+        last_word = match.group(1) if match else ""  # Extract the last word
 
-        # Ensure the last word is at the end of the line or preceded by a space
-        if not current_line.endswith(last_word) or (len(current_line) > len(last_word) and current_line[-len(last_word) - 1] != " "):
+        if not last_word:
             self.hide_suggestion_box()
             return
 
