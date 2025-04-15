@@ -90,9 +90,11 @@ class ButtonsRibbon(Block):
         
         self.undo_btn = tk.Button(self, text="UNDO", command=self.NotesApp.undo)
         self.redo_btn = tk.Button(self, text="REDO", command=self.NotesApp.redo)
+        self.copy_btn = tk.Button(self, text="COPY", command=self.NotesApp.copy)
+        self.paste_btn = tk.Button(self, text="PASTE", command=self.NotesApp.paste)
         self.close_btn = tk.Button(self, text="CLOSE", command=self.NotesApp.close)
         
-        self.buttons = [self.undo_btn, self.redo_btn, self.close_btn]
+        self.buttons = [self.undo_btn, self.redo_btn, self.copy_btn, self.paste_btn, self.close_btn]
         for btn in self.buttons:
             btn.pack(side=tk.LEFT)
     
@@ -103,6 +105,8 @@ class ButtonsRibbon(Block):
     def update_buttons(self):
         self.undo_btn.config(state="normal")
         self.redo_btn.config(state="normal")
+        self.copy_btn.config(state="normal")
+        self.paste_btn.config(state="normal")
         self.close_btn.config(state="normal")
 
 # Tkinter Application
@@ -120,18 +124,16 @@ class NotesApp(tk.Tk):
         # Menu Bar
         menu_bar = tk.Menu(self)
         file_menu = tk.Menu(menu_bar, tearoff=0)
-        file_menu.add_command(label="Open", command=self.open_file)
-        file_menu.add_command(label="Save", command=self.save_file)
+        file_menu.add_command(label="Open", accelerator="Ctrl+O", command=self.open_file)
+        file_menu.add_command(label="Save", accelerator="Ctrl+S", command=self.save_file)
         file_menu.add_separator()
         file_menu.add_command(label="Exit", command=self.quit)
         menu_bar.add_cascade(label="File", menu=file_menu)
         
         # Edit menu
         edit_menu = tk.Menu(menu_bar, tearoff=0)
-        edit_menu.add_command(label="Undo", command=self.undo)
-        edit_menu.add_command(label="Redo", command=self.redo)
-        edit_menu.add_command(label="Undo", accelerator="CTRL+Z", command=self.undo)
-        edit_menu.add_command(label="Redo", accelerator="CTRL+Y", command=self.redo)
+        edit_menu.add_command(label="Undo", accelerator="Ctrl+Z", command=self.undo)
+        edit_menu.add_command(label="Redo", accelerator="Ctrl+Y", command=self.redo)
         menu_bar.add_cascade(label="Edit", menu=edit_menu)
         
         self.config(menu=menu_bar)
@@ -147,6 +149,8 @@ class NotesApp(tk.Tk):
         self.text_area.pack(expand=True, fill=tk.BOTH)
 
         #Keyboard shortcuts
+        self.bind_all(("Control-o"), lambda event: self.open_file()) # Keyboard shortcut for open
+        self.bind_all(("Control-s"), lambda event: self.save_file()) # Keyboard shortcut for save
         self.bind_all(("Control-z"), lambda event: self.undo()) # Keyboard shortcut for undo
         self.bind_all(("Control-y"), lambda event: self.redo()) # Keyboard shortcut for redo
 
@@ -216,6 +220,16 @@ class NotesApp(tk.Tk):
 
     def redo(self):
         self.text_area.edit_redo()
+
+    def copy(self):
+        self.clipboard_clear()
+        self.clipboard_append(self.text_area.selection_get())
+    
+    def paste(self):
+        try:
+            self.text_area.insert(tk.INSERT, self.clipboard_get())
+        except tk.TclError:
+            pass
 
     def save_file(self):
         if self.file_path:
