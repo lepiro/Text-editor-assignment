@@ -9,14 +9,15 @@ Word suggestion box:
 - Doesn't close, fix it // would it be good if you press space and then the box goes away, right? // fixed
 - Do something so that the suggestion box doesn't go over text (position_suggestion_box) //  fixed
     - ^ tää pitää korjata uudelleen, koska on nyt ankkuroitu spesifiin paikkaan, joka näemmä vaihtelee riippuen sun näytön resoluutiosta:
-        - voitais varmaan ankkuroida se esim. kursoriin, jotta se boxi pysyy aina järkevässä paikassa tekstin/kursorin alla
+        - voitais varmaan ankkuroida se esim. kursoriin, jotta se boxi pysyy aina järkevässä paikassa tekstin/kursorin alla // fixed juuri kuten edellä selitetty: oli ankkuroitu tiettyyn paikkaan, nyt on kursorisidonnainen sijainti
 - Make tab work and arrow keys to navigate in the suggestion box // done
-- lakkaa toimimasta tabin jälkeen
-- hashtag crashaa koko editorin! oh no
+- Suggestion box lakkaa kokonaan toimimasta jos on lisännyt tab-välin (= se 4 välilyönnin väli)
+- Hashtagin lisääminen crashaa koko editorin (erikoismerkeistä vain hashtag näyttää tekevän tätä)
 
 Spell check for python syntax(?) // mietin että tarviiko tätä, kun kerran pythonin keywordeihin ehdottaa jo sanoja
 Try to add frames
 Make text editor standard size only // tai et sitä pystyy skaalaamaan (ankkuroidaan kaikki ruudun reunoihin tms.) // koko on nyt laitettu maksimin ja minimin avulla tiettyyn kokoon (saa muuttaa jos siltä tuntuu)
+    - asetettu maksimikooksi 4K-resoluutio ja minimikooksi 400x100, joka testauksen jälkeen vaikuttaisi olevan järkevin pienin koko, jossa editori toimii moitteetta
 
 Optional:
 - Copy and paste functions in buttons ribbon // done

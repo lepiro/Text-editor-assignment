@@ -127,7 +127,7 @@ class NotesApp(tk.Tk):
         file_menu.add_command(label="Open", accelerator="Ctrl+O", command=self.open_file)
         file_menu.add_command(label="Save", accelerator="Ctrl+S", command=self.save_file)
         file_menu.add_separator()
-        file_menu.add_command(label="Exit", command=self.quit)
+        file_menu.add_command(label="Exit", command=self.close)
         menu_bar.add_cascade(label="File", menu=file_menu)
         
         # Edit menu
@@ -175,25 +175,21 @@ class NotesApp(tk.Tk):
 
         # Creating the buttons ribbon
         self.buttons_ribbon = ButtonsRibbon(self, self)
-        self.buttons_ribbon.pack(side=tk.TOP, fill=tk.X)
         self.buttons_ribbon.place(rely=0, anchor=tk.NW)
         self.buttons_ribbon.update_buttons()
 
         self.protocol("WM_DELETE_WINDOW", lambda: self.close())
 
     def position_suggestion_box(self):
-        # Calculating the width of window
-        window_width = self.winfo_width()
-
-        # The width of the suggestion box
-        suggestion_box_width = self.suggestion_box.winfo_reqwidth()
-
-        x_position = self.winfo_rootx() # no padding from the right side
-        y_position = self.winfo_rooty() + 30  # 30 pixels from the top
-
-        # Placing the suggestion box at the calculated position
-        self.suggestion_box.place(x=x_position, y=y_position)
-        self.suggestion_box.lift()
+        # Getting the current cursor position in the text area
+        bbox = self.text_area.bbox("insert")
+        if bbox:
+            x, y, width, height = bbox
+            # Adjust with text widget's absolute position
+            abs_x = self.text_area.winfo_rootx() + x
+            abs_y = self.text_area.winfo_rooty() + y + height
+            self.suggestion_box.place(x=abs_x - self.winfo_rootx(), y=abs_y - self.winfo_rooty())
+            self.suggestion_box.lift()
 
     def search_word(self):
         # Getting the word to search
@@ -378,6 +374,19 @@ class NotesApp(tk.Tk):
             self.suggestion_box.selection_clear(0, tk.END)  # Clearing previous selection
             self.suggestion_box.selection_set(index)  # Setting the new selection
             self.suggestion_box.activate(index)  # Activating the new selection
+
+            # Inserting the selected word into the text area, "inline preview"/"live suggestion"
+            selected_word = self.suggestion_box.get(index) # Getting the selected word in the suggestion box
+            cursor_index = self.text_area.index(tk.INSERT) # Getting the current cursor position
+            line_start = f"{cursor_index.split('.')[0]}.0" # Determining the start of the line
+            current_line = self.text_area.get(line_start, cursor_index) # Extract the text from the beginning of the line up to the cursor position
+
+            if current_line.split():
+                last_word = current_line.split()[-1] # Extract the word being autocompleted
+                last_word_start = current_line.rfind(last_word) # Find the character position of the last word in the current line
+                self.text_area.delete(f"{line_start}+{last_word_start}c", cursor_index) # Deleting the last word from the text area
+                self.text_area.insert(tk.INSERT, selected_word) # Inserting the selected word from the suggestion box into the text area
+                self.text_area.mark_set("insert", f"{line_start}+{last_word_start + len(selected_word)}c") # Move the insert cursor back to where it was
 
             return "break"  # Preventing default behavior of arrow keys
         return None  # Allowing default behavior if the suggestion box is not visible
