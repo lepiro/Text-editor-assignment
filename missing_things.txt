@@ -20,3 +20,4 @@ Make text editor standard size only // tai et sitä pystyy skaalaamaan (ankkuroi
 
 Optional:
 - Copy and paste functions in buttons ribbon // done
+- Keyboard shortcuts don't work // now they work

@@ -114,8 +114,8 @@ class NotesApp(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("Bestest Text Editor")
-        self.maxsize(600, 600) # Setting the maximum size of the window
-        self.minsize(600, 600) # Setting the minimum size of the window
+        self.maxsize(4096, 2400) # Setting the maximum size of the window
+        self.minsize(400, 100) # Setting the minimum size of the window
 
         # Top Frame
         self.top_frame = tk.Frame(self)
@@ -148,11 +148,11 @@ class NotesApp(tk.Tk):
         self.text_area = tk.Text(self, wrap="word", undo=True, bg="#ffffff", highlightthickness=0, relief="flat", font=("Arial", 10))
         self.text_area.pack(expand=True, fill=tk.BOTH)
 
-        #Keyboard shortcuts
-        self.bind_all(("Control-o"), lambda event: self.open_file()) # Keyboard shortcut for open
-        self.bind_all(("Control-s"), lambda event: self.save_file()) # Keyboard shortcut for save
-        self.bind_all(("Control-z"), lambda event: self.undo()) # Keyboard shortcut for undo
-        self.bind_all(("Control-y"), lambda event: self.redo()) # Keyboard shortcut for redo
+        # Keyboard shortcuts
+        self.bind_all("<Control-o>", lambda event: self.open_file()) # Keyboard shortcut for open
+        self.bind_all("<Control-s>", lambda event: self.save_file()) # Keyboard shortcut for save
+        self.bind_all("<Control-z>", lambda event: self.undo()) # Keyboard shortcut for undo
+        self.bind_all("<Control-y>", lambda event: self.redo()) # Keyboard shortcut for redo
 
         # Suggestion Box
         self.suggestion_box = tk.Listbox(self, height=5)
@@ -179,6 +179,8 @@ class NotesApp(tk.Tk):
         self.buttons_ribbon.place(rely=0, anchor=tk.NW)
         self.buttons_ribbon.update_buttons()
 
+        self.protocol("WM_DELETE_WINDOW", lambda: self.close())
+
     def position_suggestion_box(self):
         # Calculating the width of window
         window_width = self.winfo_width()
@@ -192,7 +194,6 @@ class NotesApp(tk.Tk):
         # Placing the suggestion box at the calculated position
         self.suggestion_box.place(x=x_position, y=y_position)
         self.suggestion_box.lift()
-
 
     def search_word(self):
         # Getting the word to search
