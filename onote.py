@@ -14,9 +14,7 @@ class ONote:
 
     @text.setter
     def text(self, value):
-        if not value:
-            raise ValueError("Text cannot be empty")
-        self.__text = value
+        self.__text = value or ""
 
     @property
     def filename(self):

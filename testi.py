@@ -43,8 +43,9 @@ def syntax_highlight(text_widget: Text):
         start = text_widget.search(r"#.*", start, stopindex="end", regexp=True)
         if not start:
             break
-        end = f"{start}+{len(text_widget.get(start, start + '+1c'))}c"
-        text_widget.tag_add("comment", start, end)
+        line_end = start.split('.')[0] + '.end'
+        text_widget.tag_add("comment", start, line_end)
+        start = line_end
     text_widget.tag_config("comment", foreground="gray", font=("Arial", 10, "bold"))
 
 # Autocomplete function for Python keywords
@@ -181,6 +182,13 @@ class NotesApp(tk.Tk):
 
         self.protocol("WM_DELETE_WINDOW", lambda: self.close())
 
+    def update_title(self):
+        if self.file_path:
+            filename = self.file_path.split("/")[-1]
+            self.title(f"{filename} - Bestest Text Editor")
+        else:
+            self.title("Untitled - Bestest Text Editor")
+
     def position_suggestion_box(self):
         # Getting the current cursor position in the text area
         bbox = self.text_area.bbox("insert")
@@ -234,6 +242,7 @@ class NotesApp(tk.Tk):
             with open(self.file_path, "w") as f:
                 f.write(self.text_area.get("1.0", "end-1c"))
             messagebox.showinfo("Info", "File saved successfully!")
+            self.update_title()
         else:
             self.save_as()
 
@@ -243,6 +252,7 @@ class NotesApp(tk.Tk):
             with open(self.file_path, "w") as f:
                 f.write(self.text_area.get("1.0", "end-1c"))
             messagebox.showinfo("Info", "File saved successfully!")
+            self.update_title()
 
     def open_file(self):
         self.file_path = filedialog.askopenfilename(filetypes=[("Text files", "*.txt"), ("All files", "*.*")])
@@ -251,6 +261,7 @@ class NotesApp(tk.Tk):
                 content = f.read()
             self.text_area.delete("1.0", "end-1c")
             self.text_area.insert("1.0", content)
+            self.update_title()
     
     # Asking for confirmation to save changes when closing the app
     def close(self):
