@@ -146,8 +146,16 @@ class NotesApp(tk.Tk):
         self.search_button = tk.Button(self.top_frame, text="Search", command=self.search_word, bg="lightblue")
         self.search_button.pack(side=tk.RIGHT, padx=5)
 
+        # Frame for line numbers and main text
+        self.text_frame = tk.Frame(self)
+        self.text_frame.pack(expand=True, fill=tk.BOTH)
+
+        # Line number display
+        self.line_numbers = tk.Text(self.text_frame, width=4, bg="#f0f0f0", state="disabled", wrap="none", font=("Arial", 10))
+        self.line_numbers.pack(side=tk.LEFT, fill=tk.Y)
+
         # Text Area
-        self.text_area = tk.Text(self, wrap="word", undo=True, bg="#ffffff", highlightthickness=0, relief="flat", font=("Arial", 10))
+        self.text_area = tk.Text(self.text_frame, wrap="word", undo=True, bg="#ffffff", highlightthickness=0, relief="flat", font=("Arial", 10))
         self.text_area.pack(expand=True, fill=tk.BOTH)
 
         # Keyboard shortcuts
@@ -171,6 +179,12 @@ class NotesApp(tk.Tk):
         self.text_area.bind("<space>", self.hide_suggestion_box)
         self.text_area.bind("<FocusOut>", self.hide_suggestion_box)
         self.text_area.bind("<Tab>", self.complete_autocomplete)
+        self.text_area.bind("<MouseWheel>", self.on_mouse_wheel)
+        self.text_area.bind("<Button-1>", self.on_click)
+        self.text_area.bind("<Configure>", self.update_line_numbers)
+
+        # Initialize line numbers
+        self.update_line_numbers()
 
         # File Path
         self.file_path = None
@@ -181,6 +195,14 @@ class NotesApp(tk.Tk):
         self.buttons_ribbon.update_buttons()
 
         self.protocol("WM_DELETE_WINDOW", lambda: self.close())
+    
+    def update_line_numbers(self, event=None):
+        line_count = int(self.text_area.index("end-1c").split('.')[0])
+        self.line_numbers.config(state="normal")
+        self.line_numbers.delete(1.0, "end")
+        for i in range(1, line_count + 1):
+            self.line_numbers.insert("end", f"{i}\n")
+        self.line_numbers.config(state="disabled")
 
     def update_title(self):
         if self.file_path:
@@ -277,6 +299,13 @@ class NotesApp(tk.Tk):
         # Syntax highlighting function whenever a key is released
         syntax_highlight(self.text_area)
         self.autocomplete(event)
+        self.update_line_numbers()
+
+    def on_mouse_wheel(self, event):
+        self.line_numbers.yview_scroll(int(-1*(event.delta/120)), "units")
+
+    def on_click(self, event=None):
+        self.line_numbers.yview_moveto(self.text_area.yview()[0])
 
     def hide_suggestion_box(self, event=None):
         self.suggestion_box.place_forget()  # Hiding the suggestion box
