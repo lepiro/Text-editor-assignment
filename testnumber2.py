@@ -438,24 +438,30 @@ class NotesApp(tk.Tk):
             self.suggestion_box.place_forget()
 
     def select_suggestion(self, event=None):
-        selection = self.suggestion_box.curselection()
-        if not selection:
+        # Handle the Enter key for selecting suggestions/inserting a new line 
+        if self.suggestion_box.winfo_ismapped():
+            # If the suggestion box is visible, select the suggestion
+            selection = self.suggestion_box.curselection()
+            if not selection:
+                return "break"
+            word = self.suggestion_box.get(selection[0])
+            idx = self.get_cursor_index()
+            text = self.dll.get_text()[:idx]
+            parts = text.split()
+            if not parts:
+                return "break"
+            start_idx = idx - len(parts[-1])
+            for _ in range(len(parts[-1])):
+                self.dll.delete(start_idx)
+            for i, c in enumerate(word):
+                self.dll.insert(start_idx + i, c)
+            self.refresh_text()
+            self.suggestion_box.place_forget()
+            self.highlight_syntax()
             return "break"
-        word = self.suggestion_box.get(selection[0])
-        idx = self.get_cursor_index()
-        text = self.dll.get_text()[:idx]
-        parts = text.split()
-        if not parts:
-            return "break"
-        start_idx = idx - len(parts[-1])
-        for _ in range(len(parts[-1])):
-            self.dll.delete(start_idx)
-        for i, c in enumerate(word):
-            self.dll.insert(start_idx + i, c)
-        self.refresh_text()
-        self.suggestion_box.delete(0, tk.END)
-        self.highlight_syntax()
-        return "break"
+        else:
+            # If the suggestion box is not visible, allow the default behavior (newline)
+            return None
 
     def refresh_text(self):
         self.text_area.delete("1.0", tk.END)
