@@ -17,6 +17,7 @@ Word suggestion box:
         -> changed it to "re.search(r"(\w+)$", current_line)", which allows it to work regardless of how much whitespace or tabbing is before the word
 - Hashtagin lisääminen crashaa koko editorin (erikoismerkeistä vain hashtag näyttää tekevän tätä)
     // fixed
+    
 Misc:
 - Spell check for python syntax(?) // mietin että tarviiko tätä, kun kerran pythonin keywordeihin ehdottaa jo sanoja
 - Try to add frames
