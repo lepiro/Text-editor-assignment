@@ -175,7 +175,7 @@ class NotesApp(tk.Tk):
         self.suggestion_box.bind("<Tab>", self.insert_autocomplete)
         self.suggestion_box.bind("<Up>", self.navigate_suggestions)
         self.suggestion_box.bind("<Down>", self.navigate_suggestions)
-        self.suggestion_box.bind("<space>", self.suggestion_box.place_forget)
+        self.suggestion_box.bind("<space>", self.hide_suggestion_box)
 
         # Menu Bar
         self.menu_bar = tk.Menu(self)
