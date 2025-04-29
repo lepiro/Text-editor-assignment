@@ -54,11 +54,11 @@ class Block(ttk.Frame, ABC):
     def disable(self, nro):
         pass
 
-    def disableAll(self):
+    def disable_all(self):
         for btn in self.buttons:
             btn.config(state="disabled")
 
-    def enableAll(self):
+    def enable_all(self):
         for btn in self.buttons:
             btn.config(state="normal")
 
@@ -141,6 +141,7 @@ class NotesApp(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("Bestest Text Editor")
+        self.file_path = None
 
         self.dll = DoublyLinkedList()
         self.undo_stack = UndoStack()
@@ -158,7 +159,7 @@ class NotesApp(tk.Tk):
 
         self.text_area = tk.Text(self, wrap='word')
         self.text_area.pack(expand=1, fill=tk.BOTH)
-        self.text_area.bind("<Key>", self.on_key)
+        self.text_area.bind("<Key>", self.on_text_change)
         self.text_area.bind("<space>", self.add_to_trie)
         self.text_area.bind("<Up>", self.navigate_suggestions)
         self.text_area.bind("<Down>", self.navigate_suggestions)
@@ -182,6 +183,7 @@ class NotesApp(tk.Tk):
         file_menu = tk.Menu(self.menu_bar, tearoff=0)
         file_menu.add_command(label="Open", accelerator="Ctrl+O", command=self.open_file)
         file_menu.add_command(label="Save", accelerator="Ctrl+S", command=self.save_file)
+        file_menu.add_command(label="Save As", accelerator="Ctrl+Shift+S", command=self.save_as)
         file_menu.add_separator()
         file_menu.add_command(label="Exit", command=self.close)
         self.menu_bar.add_cascade(label="File", menu=file_menu)
@@ -202,7 +204,9 @@ class NotesApp(tk.Tk):
         self.buttons_ribbon.place(rely=0, anchor=tk.NW)
         self.buttons_ribbon.update_buttons()
 
-        self.protocol("WM_DELETE_WINDOW", lambda: self.close())
+        self.protocol("WM_DELETE_WINDOW", self.close)
+
+        self.bind_text_events()
 
     def search_word(self):
         # Getting the word to search
@@ -225,26 +229,19 @@ class NotesApp(tk.Tk):
             start = end
         self.text_area.tag_config("search_highlight", background="yellow")
 
-    def on_key(self, event):
-        # Handle key press events
-        if event.keysym == 'BackSpace':
-            idx = self.get_cursor_index() - 1
-            if idx >= 0:  # Ensure the index is valid
-                deleted = self.dll.delete(idx)
-                if deleted:
-                    self.undo_stack.push('delete', idx, deleted)
-                    self.refresh_text()
-                    self.update_suggestions()
-        elif event.char.isprintable():
-            idx = self.get_cursor_index()
-            self.dll.insert(idx, event.char)
-            self.undo_stack.push('insert', idx, event.char)
-            self.refresh_text()
-            self.update_suggestions()
-        self.highlight_syntax()
+    def bind_text_events(self):
+        self.text_area.bind("<<Modified>>", self.on_text_change)
+        self.text_area.edit_modified(False)
 
-        # Prevent the default behavior of the Text widget
-        return "break"
+    def on_text_change(self, event):
+        if self.text_area.edit_modified():
+            text = self.text_area.get("1.0", tk.END)[:-1]  # Remove trailing newline
+            self.dll = DoublyLinkedList()
+            for i, char in enumerate(text):
+                self.dll.insert(i, char)
+        self.text_area.edit_modified(False)
+        self.highlight_syntax()
+        self.update_suggestions()   
 
     def undo(self, event=None):
         # undo
@@ -312,13 +309,13 @@ class NotesApp(tk.Tk):
     
     # Asking for confirmation to save changes when closing the app
     def close(self):
-        if messagebox.askyesno("Exit", "Do you want to save before exiting?"):
+        if messagebox.askyesnocancel("Exit", "Do you want to save before exiting?"):
             self.save_file()
         self.destroy()
 
     def add_to_trie(self, event):
         # Add the last word to the trie when space is pressed.
-        words = self.dll.get_text().split()
+        words = self.text_area.get("1.0", tk.END).split()
         if words:
             last_word = words[-1].strip()
             if last_word:  # Ensure the last word is not empty
@@ -328,37 +325,30 @@ class NotesApp(tk.Tk):
         idx = self.get_cursor_index()
         self.dll.insert(idx, " ")
         self.refresh_text()
-
-        # Prevent the default behavior of the Text widget
-        return "break"
     
-    def autocomplete(self, event):
-        if event.keysym == "space":
+    def autocomplete(self, event=None):
+        if event and event.keysym == "space":
             return
 
-        # Get the current word being typed
-        cursor_index = self.text_area.index(tk.INSERT)
-        line_start = f"{cursor_index.split('.')[0]}.0"
-        current_line = self.text_area.get(line_start, cursor_index)
-        match = re.search(r"(\w+)$", current_line)
-        last_word = match.group(1) if match else ""
-
-        if not last_word:
+        prefix = self.get_current_word()
+        if not prefix:
             self.hide_suggestion_box()
             return
 
-        # Use Trie to find matching words
-        matches = self.trie.autocomplete(last_word)
-
+        matches = self.trie.autocomplete(prefix)
         if matches:
             self.suggestion_box.delete(0, tk.END)
-            for match in matches:
+            for match in matches[:5]:
                 self.suggestion_box.insert(tk.END, match)
 
             self.suggestion_box.selection_clear(0, tk.END)
             self.suggestion_box.selection_set(0)
             self.suggestion_box.activate(0)
 
+            bbox = self.text_area.bbox(tk.INSERT)
+            if bbox:
+                x, y, w, h = bbox
+                self.suggestion_box.place(x=x, y=y + h)
             self.suggestion_box.lift()
         else:
             self.hide_suggestion_box()
@@ -407,35 +397,42 @@ class NotesApp(tk.Tk):
 
             return "break"
         return None
+    
+    def get_current_word(self):
+        cursor_index = self.text_area.index(tk.INSERT)
+        line_start = f"{cursor_index.split('.')[0]}.0" # Finds beginning of current line
+        current_line = self.text_area.get(line_start, cursor_index) # Collects the text until cursor index
+        match = re.search(r"(\w+)$", current_line) # Finds last word in line
+        return match.group(1) if match else "" 
+    
+    def hide_suggestion_box(self): # Method to hide suggestion box
+        self.suggestion_box.place_forget()
+        self.suggestion_box.delete(0, tk.END) # Resets suggestions
 
     def update_suggestions(self):
-        # Update the autocomplete suggestion box
-        idx = self.get_cursor_index()
-        text = self.dll.get_text()[:idx]
-        word = text.split()[-1] if text.split() else ""
-        suggestions = self.trie.autocomplete(word)
+        prefix = self.get_current_word()
+        if not prefix: # Hide suggestions if no word is typed
+            self.hide_suggestion_box()
+            return
 
-        # Clear the suggestion box
+        matches = self.trie.autocomplete(prefix)
         self.suggestion_box.delete(0, tk.END)
 
-        if suggestions:
-            # Populate the suggestion box with matching words
-            for suggestion in suggestions[:5]:
+        if matches:
+            for suggestion in matches[:5]: # If there are matches, shows the top five
                 self.suggestion_box.insert(tk.END, suggestion)
             self.suggestion_box.selection_clear(0, tk.END)
             self.suggestion_box.selection_set(0)
 
-            # Position the suggestion box near the cursor
-            bbox = self.text_area.bbox(tk.INSERT)
+            bbox = self.text_area.bbox(tk.INSERT) # Puts box next to cursor
             if bbox:
                 x, y, width, height = bbox
-                abs_x = self.text_area.winfo_rootx() + x
-                abs_y = self.text_area.winfo_rooty() + y + height
-                self.suggestion_box.place(x=abs_x - self.winfo_rootx(), y=abs_y - self.winfo_rooty())
+                offset = 22
+                self.suggestion_box.place(x=x, y=y + height + offset) # Position below cursor
                 self.suggestion_box.lift()
         else:
-            # Hide the suggestion box if no matches are found
-            self.suggestion_box.place_forget()
+            self.hide_suggestion_box()
+
 
     def select_suggestion(self, event=None):
         # Handle the Enter key for selecting suggestions/inserting a new line 
@@ -464,14 +461,14 @@ class NotesApp(tk.Tk):
             return None
 
     def refresh_text(self):
+        index = self.text_area.index(tk.INSERT)
         self.text_area.delete("1.0", tk.END)
         self.text_area.insert("1.0", self.dll.get_text())
+        self.text_area.mark_set(tk.INSERT, index)
 
     def get_cursor_index(self):
-        index = self.text_area.index(tk.INSERT)
-        line, col = map(int, index.split("."))
-        text = self.text_area.get("1.0", index)
-        return sum(len(line) + 1 for line in text.splitlines()[:line - 1]) + col
+        cursor_index = self.text_area.index(tk.INSERT)
+        return cursor_index
 
     def highlight_syntax(self):
         # Highlight Python keywords and strings in the Text widget.
@@ -511,32 +508,6 @@ class NotesApp(tk.Tk):
         # Configure the tags
         self.text_area.tag_config("keyword", foreground="blue", font=("Arial", 10, "bold"))
         self.text_area.tag_config("string", foreground="green", font=("Arial", 10, "italic"))
-
-    def open_file(self, event=None):
-        # Open a file and load its content into the text editor.
-        file_path = filedialog.askopenfilename()
-        if file_path:
-            with open(file_path, 'r') as file:
-                content = file.read()
-                self.text_area.delete("1.0", tk.END)
-                self.text_area.insert("1.0", content)
-                self.dll = DoublyLinkedList()
-                for i, c in enumerate(content):
-                    self.dll.insert(i, c)
-            self.refresh_text()
-            self.highlight_syntax()
-
-    def save_file(self, event=None):
-        # Save the content of the text editor to a file
-        file_path = filedialog.asksaveasfilename(defaultextension=".txt",
-                                                 filetypes=[("Text files", "*.txt"), ("All files", "*.*")])
-        if file_path:
-            try:
-                with open(file_path, 'w') as file:
-                    file.write(self.dll.get_text())
-                messagebox.showinfo("Success", "File saved successfully!")
-            except Exception as e:
-                messagebox.showerror("Error", f"Failed to save file: {e}")
 
 if __name__ == "__main__":
     app = NotesApp()
