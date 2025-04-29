@@ -395,6 +395,10 @@ class NotesApp(tk.Tk):
             return "break"
         return None
     
+    def hide_suggestion_box(self, event=None):
+        self.suggestion_box.place_forget()  # Hiding the suggestion box
+        self.suggestion_box.delete(0, tk.END)  # Clearing all suggestions
+
     def navigate_suggestions(self, event):
         if self.suggestion_box.winfo_ismapped():
             size = self.suggestion_box.size()
@@ -521,32 +525,6 @@ class NotesApp(tk.Tk):
         # Configure the tags
         self.text_area.tag_config("keyword", foreground="blue", font=("Arial", 10, "bold"))
         self.text_area.tag_config("string", foreground="green", font=("Arial", 10, "italic"))
-
-    def open_file(self, event=None):
-        # Open a file and load its content into the text editor.
-        file_path = filedialog.askopenfilename()
-        if file_path:
-            with open(file_path, 'r') as file:
-                content = file.read()
-                self.text_area.delete("1.0", tk.END)
-                self.text_area.insert("1.0", content)
-                self.dll = DoublyLinkedList()
-                for i, c in enumerate(content):
-                    self.dll.insert(i, c)
-            self.refresh_text()
-            self.highlight_syntax()
-
-    def save_file(self, event=None):
-        # Save the content of the text editor to a file
-        file_path = filedialog.asksaveasfilename(defaultextension=".txt",
-                                                 filetypes=[("Text files", "*.txt"), ("All files", "*.*")])
-        if file_path:
-            try:
-                with open(file_path, 'w') as file:
-                    file.write(self.dll.get_text())
-                messagebox.showinfo("Success", "File saved successfully!")
-            except Exception as e:
-                messagebox.showerror("Error", f"Failed to save file: {e}")
 
 if __name__ == "__main__":
     app = NotesApp()
