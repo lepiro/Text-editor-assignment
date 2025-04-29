@@ -284,6 +284,13 @@ class NotesApp(tk.Tk):
         self.refresh_text()
         self.highlight_syntax()
 
+    def update_title(self):
+        if self.file_path:
+            filename = self.file_path.split("/")[-1]
+            self.title(f"{filename} - Bestest Text Editor")
+        else:
+            self.title("Untitled - Bestest Text Editor")
+
     def save_file(self):
         if self.file_path:
             with open(self.file_path, "w") as f:
@@ -312,9 +319,12 @@ class NotesApp(tk.Tk):
     
     # Asking for confirmation to save changes when closing the app
     def close(self):
-        if messagebox.askyesno("Exit", "Do you want to save before exiting?"):
+        result = messagebox.askyesnocancel("Exit", "Do you want to save before exiting?")
+        if result is True:
             self.save_file()
-        self.destroy()
+            self.destroy()
+        elif result is False:
+            self.destroy()
 
     def add_to_trie(self, event):
         # Add the last word to the trie when space is pressed.
